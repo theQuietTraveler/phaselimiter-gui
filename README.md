@@ -1,6 +1,16 @@
 # PhaseLimiter GUI
 
+> **Vibe-coded because I got tired of using the slow version on the internet. This is a working prototype that can be improved upon by better programmers.**
+
 A professional audio mastering GUI application that provides consistent loudness targeting, proper limiting, and high-quality audio processing without peaking or thin sound issues.
+
+## Why This Exists
+
+I was frustrated with slow, unreliable online mastering tools that either took forever to process or produced inconsistent results. So I built this local solution that:
+- **Processes instantly** - No waiting for uploads/downloads
+- **Works offline** - No internet dependency
+- **Consistent results** - Same algorithm every time
+- **Open source** - Can be improved by the community
 
 ## Features
 
@@ -25,6 +35,18 @@ The application uses a professional 8-stage mastering pipeline:
 7. **LUFS Targeting** - Final gain adjustment for target loudness
 8. **Final Conversion** - Output to WAV format
 
+## Known Issues & Limitations
+
+### Current Issues
+- **Some file formats may fail** - Particularly corrupted WAV files or unsupported formats
+- **Inconsistent script versions** - Sometimes the old "Simple Audio Mastering Tool" is used instead of the new "Professional Audio Mastering Tool"
+- **Format detection issues** - Some files with incorrect extensions may fail
+
+### Workarounds
+- **Use standard formats** - MP3, M4A, or properly formatted WAV files work best
+- **Check file integrity** - Ensure audio files aren't corrupted
+- **Restart the app** - If you see "Simple Audio Mastering Tool" in logs, restart the application
+
 ## Installation
 
 ### Prerequisites
@@ -44,10 +66,10 @@ git clone https://github.com/yourusername/phaselimiter-gui.git
 cd phaselimiter-gui
 
 # Build the application
-go build -o phaselimiter-gui main.go mastering.go cmd_hide_window.go
+./build.sh
 
 # Run the application
-./phaselimiter-gui
+./run.sh
 ```
 
 ### Linux
@@ -56,10 +78,10 @@ go build -o phaselimiter-gui main.go mastering.go cmd_hide_window.go
 # Install dependencies
 sudo apt-get install ffmpeg sox golang-go
 
-# Clone and build (same as macOS)
+# Clone and build
 git clone https://github.com/yourusername/phaselimiter-gui.git
 cd phaselimiter-gui
-go build -o phaselimiter-gui main.go mastering.go cmd_hide_window.go
+./build.sh
 ./phaselimiter-gui
 ```
 
@@ -69,10 +91,10 @@ go build -o phaselimiter-gui main.go mastering.go cmd_hide_window.go
 # Install dependencies via chocolatey
 choco install ffmpeg sox golang
 
-# Clone and build (same as other platforms)
+# Clone and build
 git clone https://github.com/yourusername/phaselimiter-gui.git
 cd phaselimiter-gui
-go build -o phaselimiter-gui.exe main.go mastering.go cmd_hide_window.go
+./build.sh
 phaselimiter-gui.exe
 ```
 
@@ -136,6 +158,7 @@ phaselimiter-gui/
 2. **"SoX not found"** - Install SoX via package manager
 3. **Processing fails** - Check file permissions and disk space
 4. **Audio still peaks** - Lower the mastering intensity or target LUFS
+5. **"Simple Audio Mastering Tool" appears** - Restart the application
 
 ### Debug Mode
 
@@ -146,11 +169,20 @@ Run with verbose output:
 
 ## Contributing
 
+This is a vibe-coded prototype that needs improvement! Contributions welcome:
+
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
 4. Test thoroughly
 5. Submit a pull request
+
+### Areas for Improvement
+- **Better error handling** - More graceful failure recovery
+- **Improved format detection** - Better handling of corrupted files
+- **Enhanced audio algorithms** - More sophisticated mastering techniques
+- **UI improvements** - Better user experience
+- **Performance optimization** - Faster processing
 
 ## License
 
@@ -165,10 +197,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Version History
 
-- **v1.0.0** - Initial release with professional mastering pipeline
+- **v1.0.0** - Initial vibe-coded release
 - **v1.1.0** - Fixed peaking issues and improved audio quality
 - **v1.2.0** - Added LUFS targeting and bass preservation
 
 ---
 
-**Note**: This application is designed for professional audio mastering. For best results, use high-quality source material and appropriate target LUFS levels for your intended playback environment. 
+**Note**: This is a working prototype built out of frustration with slow online tools. It's functional but could use improvement by better programmers. For best results, use high-quality source material and appropriate target LUFS levels for your intended playback environment. 
