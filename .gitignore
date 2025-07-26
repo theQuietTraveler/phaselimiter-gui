@@ -1,30 +1,53 @@
-# Created by https://www.toptal.com/developers/gitignore/api/go
-# Edit at https://www.toptal.com/developers/gitignore?templates=go
-
-### Go ###
-# If you prefer the allow list template instead of the deny list, see community template:
-# https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
-#
-# Binaries for programs and plugins
+# Build artifacts
+phaselimiter-gui
+phaselimiter-gui.exe
 *.exe
-*.exe~
-*.dll
-*.so
-*.dylib
 
-# Test binary, built with `go test -c`
-*.test
+# Temporary files
+/tmp/
+*.tmp
+*.temp
 
-# Output of the go coverage tool, specifically when used with LiteIDE
-*.out
+# Audio files (test files)
+*.wav
+*.mp3
+*.m4a
+*.aac
+*.flac
+*.ogg
 
-# Dependency directories (remove the comment below to include it)
-# vendor/
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 
-# Go workspace file
-go.work
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
 
-# End of https://www.toptal.com/developers/gitignore/api/go
+# Log files
+*.log
+debug.log
 
-/phaselimiter-gui
-/phaselimiter
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Go cache
+go.sum
+
+# Temporary processing files
+/tmp/phaselimiter/
+
+# Test outputs
+test_*.wav
+*_output.wav
+*_mastered.wav
+
+# Backup files
+*.bak
+*.backup
