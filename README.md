@@ -19,21 +19,21 @@ I was frustrated with slow, unreliable online mastering tools that either took f
 - **Format Support** - Handles MP3, M4A, WAV, and other audio formats
 - **Bass Preservation** - Maintains full, rich sound without thin audio
 - **Drag & Drop Interface** - Simple and intuitive GUI
+- **Output Folder Picker** - Browse button for selecting output directory
 - **Real-time Progress** - Visual progress tracking during processing
 - **Cross-platform** - Works on macOS, Windows, and Linux
 
-## Audio Processing Pipeline
+## Runtime Architecture
 
-The application uses a professional 8-stage mastering pipeline:
+The GUI is a thin wrapper around the bundled `phase_limiter` executable:
 
-1. **Format Conversion** - Convert any audio format to compatible WAV
-2. **Audio Analysis** - Analyze audio characteristics and statistics
-3. **Normalization** - Normalize to -0.5dB to prevent clipping
-4. **Compression** - Gentle compression to control dynamics
-5. **Limiting** - Hard limiting to prevent peaks
-6. **EQ** - Subtle EQ to preserve bass and body
-7. **LUFS Targeting** - Final gain adjustment for target loudness
-8. **Final Conversion** - Output to WAV format
+1. User drops files into the GTK window.
+2. GUI resolves/validates file paths and output locations.
+3. GUI starts `phase_limiter` with mastering arguments.
+4. Progress lines from stdout are parsed and shown in the UI.
+5. Processed WAV files are written to the selected output directory.
+
+> Note: detailed DSP behavior lives inside the bundled `phaselimiter/bin/phase_limiter` tool, not in the Go GUI code.
 
 ## Known Issues & Limitations
 
@@ -49,26 +49,34 @@ The application uses a professional 8-stage mastering pipeline:
 
 ## Installation
 
+### Quick Start (Recommended)
+
+```bash
+git clone https://github.com/ai-mastering/phaselimiter-gui.git
+cd phaselimiter-gui
+./run.sh
+```
+
+`run.sh` now auto-builds the binary if missing and starts the app.
+
+If you are already inside a local clone, just run `./run.sh` (skip `git clone`).
+
 ### Prerequisites
 
 - **FFmpeg** - For audio format conversion
-- **SoX** - For audio processing and effects
 - **Go** - For building the GUI application
 
 ### macOS
 
 ```bash
 # Install dependencies
-brew install ffmpeg sox go
+brew install ffmpeg go
 
 # Clone the repository
-git clone https://github.com/yourusername/phaselimiter-gui.git
+git clone https://github.com/ai-mastering/phaselimiter-gui.git
 cd phaselimiter-gui
 
-# Build the application
-./build.sh
-
-# Run the application
+# Build + run
 ./run.sh
 ```
 
@@ -76,26 +84,24 @@ cd phaselimiter-gui
 
 ```bash
 # Install dependencies
-sudo apt-get install ffmpeg sox golang-go
+sudo apt-get install ffmpeg golang-go
 
-# Clone and build
-git clone https://github.com/yourusername/phaselimiter-gui.git
+# Clone and run
+git clone https://github.com/ai-mastering/phaselimiter-gui.git
 cd phaselimiter-gui
-./build.sh
-./phaselimiter-gui
+./run.sh
 ```
 
 ### Windows
 
 ```bash
 # Install dependencies via chocolatey
-choco install ffmpeg sox golang
+choco install ffmpeg golang
 
-# Clone and build
-git clone https://github.com/yourusername/phaselimiter-gui.git
+# Clone and run
+git clone https://github.com/ai-mastering/phaselimiter-gui.git
 cd phaselimiter-gui
-./build.sh
-phaselimiter-gui.exe
+./run.sh
 ```
 
 ## Usage
@@ -131,10 +137,8 @@ phaselimiter-gui.exe
 The application uses a sophisticated audio processing chain:
 
 - **FFmpeg** for format conversion and compatibility
-- **SoX** for audio effects and processing
-- **Multi-stage limiting** to prevent peaking
-- **Adaptive compression** based on target LUFS
-- **Conservative EQ** to preserve audio quality
+- **phase_limiter** for the actual mastering implementation
+- **Progress parsing in GUI** to display live status updates
 
 ### File Structure
 
@@ -155,10 +159,9 @@ phaselimiter-gui/
 ### Common Issues
 
 1. **"FFmpeg not found"** - Install FFmpeg via package manager
-2. **"SoX not found"** - Install SoX via package manager
-3. **Processing fails** - Check file permissions and disk space
-4. **Audio still peaks** - Lower the mastering intensity or target LUFS
-5. **"Simple Audio Mastering Tool" appears** - Restart the application
+2. **Processing fails** - Check file permissions and disk space
+3. **Audio still peaks** - Lower the mastering intensity or target LUFS
+4. **"Simple Audio Mastering Tool" appears** - Restart the application
 
 ### Debug Mode
 
@@ -191,7 +194,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Acknowledgments
 
 - **FFmpeg** - Audio/video processing
-- **SoX** - Audio effects and processing
 - **GTK3** - Cross-platform GUI framework
 - **Go** - Programming language and runtime
 
@@ -203,57 +205,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Note**: This is a working prototype built out of frustration with slow online tools. It's functional but could use improvement by better programmers. For best results, use high-quality source material and appropriate target LUFS levels for your intended playback environment. 
-
-## ✅ **Project Analysis & Status Report**
-
-### **Issues Identified from Logs:**
-
-1. **🔄 Script Version Inconsistency**
-   - Sometimes "Simple Audio Mastering Tool" appears instead of "Professional Audio Mastering Tool"
-   - **Root Cause**: GUI process caching old script versions
-   - **Solution**: Created `run.sh` script that kills old processes and ensures latest scripts
-
-2. **📁 File Format Failures**
-   - **M4A files**: "no handler for file extension `m4a'" - FFmpeg handles this but SoX doesn't
-   - **Corrupted WAV files**: "WAVE: RIFF header not found" - File integrity issues
-   - **Solution**: Updated README with troubleshooting and workarounds
-
-3. **⚡ Processing Pipeline Issues**
-   - **Compand errors**: "transfer function input values must be strictly increasing"
-   - **Solution**: Fixed in the new Professional Audio Mastering Tool
-
-### **What's Working:**
-
-✅ **Professional Audio Mastering Tool** - New 8-stage pipeline working correctly  
-✅ **Format Conversion** - FFmpeg handles M4A, MP3, WAV properly  
-✅ **LUFS Targeting** - Proper loudness targeting implemented  
-✅ **Bass Preservation** - Conservative EQ prevents thin sound  
-✅ **No Peaking** - Multi-stage limiting prevents clipping  
-
-### **Project Status:**
-
-✅ **Ready for GitHub** with:
-- ✅ **Your vibe-coded intro** - "Got tired of slow internet tools"
-- ✅ **Comprehensive documentation** - Installation, usage, troubleshooting
-- ✅ **Automated build system** - `build.sh` and `run.sh` scripts
-- ✅ **Clean repository** - No test files or temporary artifacts
-- ✅ **Cross-platform support** - macOS, Windows, Linux
-- ✅ **Professional audio processing** - Fixed peaking, consistent loudness
-
-### **Next Steps for GitHub:**
-
-1. **Initialize Git** (if not already done):
-   ```bash
-   git init
-   git add .
-   git commit -m "Initial commit: Vibe-coded audio mastering GUI"
-   ```
-
-2. **Create GitHub Repository** and push:
-   ```bash
-   git remote add origin https://github.com/yourusername/phaselimiter-gui.git
-   git push -u origin main
-   ```
-
-The project is now clean, well-documented with your personal touch, and ready for the world! 🚀 
+**Note**: This is a working prototype built out of frustration with slow online tools. It's functional but could use improvement by better programmers. For best results, use high-quality source material and appropriate target LUFS levels for your intended playback environment.
