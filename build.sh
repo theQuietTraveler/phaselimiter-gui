@@ -1,58 +1,25 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
-# PhaseLimiter GUI Build Script
-# This script builds the application for different platforms
+echo "🔨 Building PhaseLimiter GUI"
 
-set -e
-
-echo "🎵 PhaseLimiter GUI Build Script"
-echo "=================================="
-
-# Check if Go is installed
-if ! command -v go &> /dev/null; then
-    echo "❌ Error: Go is not installed. Please install Go first."
-    exit 1
+if ! command -v go >/dev/null 2>&1; then
+  echo "❌ Go is not installed."
+  exit 1
 fi
 
-# Check if required dependencies are installed
-echo "🔍 Checking dependencies..."
-
-if ! command -v ffmpeg &> /dev/null; then
-    echo "⚠️  Warning: FFmpeg not found. Audio processing may fail."
+if ! command -v ffmpeg >/dev/null 2>&1; then
+  echo "⚠️  FFmpeg not found in PATH. Processing may fail."
 fi
 
-if ! command -v sox &> /dev/null; then
-    echo "⚠️  Warning: SoX not found. Audio processing may fail."
-fi
-
-# Build for current platform
-echo "🔨 Building PhaseLimiter GUI..."
-
-# Remove old build
 rm -f phaselimiter-gui phaselimiter-gui.exe
 
-# Build the application
-if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
-    # Windows
-    go build -o phaselimiter-gui.exe main.go mastering.go cmd_hide_window.go
-    echo "✅ Built phaselimiter-gui.exe for Windows"
+if [[ "${OSTYPE:-}" == "msys" || "${OSTYPE:-}" == "win32" ]]; then
+  go build -o phaselimiter-gui.exe .
+  chmod +x phaselimiter-gui.exe || true
+  echo "✅ Built phaselimiter-gui.exe"
 else
-    # macOS and Linux
-    go build -o phaselimiter-gui main.go mastering.go cmd_hide_window.go
-    echo "✅ Built phaselimiter-gui for $(uname -s)"
+  go build -o phaselimiter-gui .
+  chmod +x phaselimiter-gui
+  echo "✅ Built phaselimiter-gui"
 fi
-
-# Make executable
-chmod +x phaselimiter-gui*
-
-echo ""
-echo "🎉 Build completed successfully!"
-echo ""
-echo "To run the application:"
-if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
-    echo "  ./phaselimiter-gui.exe"
-else
-    echo "  ./phaselimiter-gui"
-fi
-echo ""
-echo "Make sure FFmpeg and SoX are installed for full functionality." 

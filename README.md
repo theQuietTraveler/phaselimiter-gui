@@ -19,6 +19,7 @@ I was frustrated with slow, unreliable online mastering tools that either took f
 - **Format Support** - Handles MP3, M4A, WAV, and other audio formats
 - **Bass Preservation** - Maintains full, rich sound without thin audio
 - **Drag & Drop Interface** - Simple and intuitive GUI
+- **Output Folder Picker** - Browse button for selecting output directory
 - **Real-time Progress** - Visual progress tracking during processing
 - **Cross-platform** - Works on macOS, Windows, and Linux
 
@@ -48,6 +49,16 @@ The GUI is a thin wrapper around the bundled `phase_limiter` executable:
 
 ## Installation
 
+### Quick Start (Recommended)
+
+```bash
+git clone https://github.com/yourusername/phaselimiter-gui.git
+cd phaselimiter-gui
+./run.sh
+```
+
+`run.sh` now auto-builds the binary if missing and starts the app.
+
 ### Prerequisites
 
 - **FFmpeg** - For audio format conversion
@@ -63,10 +74,7 @@ brew install ffmpeg go
 git clone https://github.com/yourusername/phaselimiter-gui.git
 cd phaselimiter-gui
 
-# Build the application
-./build.sh
-
-# Run the application
+# Build + run
 ./run.sh
 ```
 
@@ -76,11 +84,10 @@ cd phaselimiter-gui
 # Install dependencies
 sudo apt-get install ffmpeg golang-go
 
-# Clone and build
+# Clone and run
 git clone https://github.com/yourusername/phaselimiter-gui.git
 cd phaselimiter-gui
-./build.sh
-./phaselimiter-gui
+./run.sh
 ```
 
 ### Windows
@@ -89,11 +96,10 @@ cd phaselimiter-gui
 # Install dependencies via chocolatey
 choco install ffmpeg golang
 
-# Clone and build
+# Clone and run
 git clone https://github.com/yourusername/phaselimiter-gui.git
 cd phaselimiter-gui
-./build.sh
-phaselimiter-gui.exe
+./run.sh
 ```
 
 ## Usage
