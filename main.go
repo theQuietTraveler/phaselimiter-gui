@@ -186,13 +186,18 @@ Notes
 	tv.AppendColumn(createTreeViewColumn("output file", COLUMN_OUTPUT))
 	tv.AppendColumn(createTreeViewColumn("status", COLUMN_STATUS))
 	tv.AppendColumn(createTreeViewColumn("message", COLUMN_MESSAGE))
-	tv.SetVExpand(true)
+tv, err := gtk.TreeViewNewWithModel(ls)
+tv.AppendColumn(createTreeViewColumn("input file", COLUMN_INPUT))
+tv.AppendColumn(createTreeViewColumn("output file", COLUMN_OUTPUT))
+tv.AppendColumn(createTreeViewColumn("status", COLUMN_STATUS))
+tv.AppendColumn(createTreeViewColumn("message", COLUMN_MESSAGE))
+tv.SetVExpand(true)
 
-	scroll, err := gtk.ScrolledWindowNew(nil, nil)
-	scroll.SetPolicy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-	scroll.Add(tv)
-	scroll.SetVExpand(true)
-	box.Add(scroll)
+scroll, err := gtk.ScrolledWindowNew(nil, nil)
+scroll.SetPolicy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+scroll.Add(tv)
+scroll.SetVExpand(true)
+box.Add(scroll)
 
 	var destInData = func(lbi *gtk.Window,
 		context *gdk.DragContext,
