@@ -2,10 +2,12 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"fmt"
+	"github.com/ai-mastering/phaselimiter-gui/internal/parsing"
 	"os/exec"
-	"regexp"
 	"strconv"
+	"sync"
 )
 
 type MasteringStatus string
@@ -35,10 +37,12 @@ type Mastering struct {
 type MasteringRunner struct {
 	MasteringUpdate chan Mastering
 	mastering       chan Mastering
-	terminated      chan bool
+	ctx             context.Context
+	cancel          context.CancelFunc
+	terminateOnce   sync.Once
 }
 
-func (m Mastering) execute(update chan Mastering) {
+func (m Mastering) execute(ctx context.Context, update chan Mastering) {
 	formatFloat := func(x float64) string {
 		return strconv.FormatFloat(x, 'f', 7, 64)
 	}
@@ -62,7 +66,7 @@ func (m Mastering) execute(update chan Mastering) {
 		"--erb_eval_func_weighting", formatBool(m.BassPreservation),
 		"--reference", formatFloat(m.Loudness),
 	}
-	cmd := exec.Command(m.PhaselimiterPath, args...)
+	cmd := exec.CommandContext(ctx, m.PhaselimiterPath, args...)
 	CmdHideWindow(cmd)
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
@@ -85,23 +89,31 @@ func (m Mastering) execute(update chan Mastering) {
 	}
 
 	scanner := bufio.NewScanner(stdout)
-	r := regexp.MustCompile("progression: ([-+]?[0-9]*\\.?[0-9]+)")
-	//output := ""
 	for scanner.Scan() {
 		line := scanner.Text()
 		fmt.Println(line)
-		// output += line
-		matches := r.FindStringSubmatch(line)
-		if len(matches) > 0 {
-			m.Progression, _ = strconv.ParseFloat(matches[1], 64)
+		if progression, ok := parsing.ExtractProgression(line); ok {
+			m.Progression = progression
 			update <- m
 		}
 	}
 
+	if err := scanner.Err(); err != nil {
+		m.Status = MasteringStatusFailed
+		m.Message = "failed to read process output: " + err.Error()
+		update <- m
+		return
+	}
+
 	err = cmd.Wait()
 	if err != nil {
-		m.Status = MasteringStatusFailed
-		m.Message = "command failed: " + err.Error() // + " output: " + output
+		if ctx.Err() != nil {
+			m.Status = MasteringStatusFailed
+			m.Message = "processing cancelled"
+		} else {
+			m.Status = MasteringStatusFailed
+			m.Message = "command failed: " + err.Error()
+		}
 		update <- m
 		return
 	}
@@ -111,29 +123,38 @@ func (m Mastering) execute(update chan Mastering) {
 	update <- m
 }
 
-func CreateMasteringRunner() MasteringRunner {
-	m := MasteringRunner{}
+func CreateMasteringRunner() *MasteringRunner {
+	ctx, cancel := context.WithCancel(context.Background())
+	m := &MasteringRunner{}
 	m.mastering = make(chan Mastering, 1000)
-	m.terminated = make(chan bool, 1000)
 	m.MasteringUpdate = make(chan Mastering, 1000)
+	m.ctx = ctx
+	m.cancel = cancel
 	return m
 }
 
-func (m MasteringRunner) Run() {
+func (m *MasteringRunner) Run() {
+	defer close(m.MasteringUpdate)
 	for {
 		select {
-		case x := <-m.mastering:
-			x.execute(m.MasteringUpdate)
-		case _ = <-m.terminated:
+		case <-m.ctx.Done():
 			return
+		case x := <-m.mastering:
+			x.execute(m.ctx, m.MasteringUpdate)
 		}
 	}
 }
 
-func (m MasteringRunner) Add(mastering Mastering) {
-	m.mastering <- mastering
+func (m *MasteringRunner) Add(mastering Mastering) {
+	select {
+	case <-m.ctx.Done():
+		return
+	case m.mastering <- mastering:
+	}
 }
 
-func (m MasteringRunner) Terminate() {
-	m.terminated <- true
+func (m *MasteringRunner) Terminate() {
+	m.terminateOnce.Do(func() {
+		m.cancel()
+	})
 }
