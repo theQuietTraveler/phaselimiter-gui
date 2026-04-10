@@ -52,12 +52,14 @@ The GUI is a thin wrapper around the bundled `phase_limiter` executable:
 ### Quick Start (Recommended)
 
 ```bash
-git clone https://github.com/yourusername/phaselimiter-gui.git
+git clone https://github.com/ai-mastering/phaselimiter-gui.git
 cd phaselimiter-gui
 ./run.sh
 ```
 
 `run.sh` now auto-builds the binary if missing and starts the app.
+
+If you are already inside a local clone, just run `./run.sh` (skip `git clone`).
 
 ### Prerequisites
 
@@ -71,7 +73,7 @@ cd phaselimiter-gui
 brew install ffmpeg go
 
 # Clone the repository
-git clone https://github.com/yourusername/phaselimiter-gui.git
+git clone https://github.com/ai-mastering/phaselimiter-gui.git
 cd phaselimiter-gui
 
 # Build + run
@@ -85,7 +87,7 @@ cd phaselimiter-gui
 sudo apt-get install ffmpeg golang-go
 
 # Clone and run
-git clone https://github.com/yourusername/phaselimiter-gui.git
+git clone https://github.com/ai-mastering/phaselimiter-gui.git
 cd phaselimiter-gui
 ./run.sh
 ```
@@ -97,7 +99,7 @@ cd phaselimiter-gui
 choco install ffmpeg golang
 
 # Clone and run
-git clone https://github.com/yourusername/phaselimiter-gui.git
+git clone https://github.com/ai-mastering/phaselimiter-gui.git
 cd phaselimiter-gui
 ./run.sh
 ```
