@@ -2,14 +2,13 @@ package main
 
 import (
 	"fmt"
+	"github.com/ai-mastering/phaselimiter-gui/internal/parsing"
 	"github.com/gotk3/gotk3/gdk"
 	"github.com/gotk3/gotk3/glib"
 	"github.com/gotk3/gotk3/gtk"
 	"log"
-	"net/url"
 	"os"
 	"path/filepath"
-	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
@@ -20,6 +19,7 @@ const (
 	COLUMN_INPUT
 	COLUMN_OUTPUT
 	COLUMN_STATUS
+	COLUMN_MESSAGE
 )
 
 func getExecDir() string {
@@ -60,8 +60,8 @@ func updateListItem(model *gtk.ListStore, iter *gtk.TreeIter, m Mastering) {
 	if m.Status == MasteringStatusProcessing {
 		status = strconv.FormatFloat(m.Progression*100, 'f', 0, 64) + "%"
 	}
-	model.Set(iter, []int{COLUMN_ID, COLUMN_INPUT, COLUMN_OUTPUT, COLUMN_STATUS},
-		[]interface{}{m.Id, m.Input, m.Output, status})
+	model.Set(iter, []int{COLUMN_ID, COLUMN_INPUT, COLUMN_OUTPUT, COLUMN_STATUS, COLUMN_MESSAGE},
+		[]interface{}{m.Id, m.Input, m.Output, status, m.Message})
 }
 
 func main() {
@@ -119,17 +119,18 @@ Process
 2. The output files are saved to output directory
 
 Notes
-- Same algorithm with bakuage.com/aimastering.com
+- Uses the same algorithm as bakuage.com / aimastering.com
 - No internet access`)
 	box.Add(notes)
 
 	ls, err := gtk.ListStoreNew(glib.TYPE_INT, glib.TYPE_STRING,
-		glib.TYPE_STRING, glib.TYPE_STRING)
+		glib.TYPE_STRING, glib.TYPE_STRING, glib.TYPE_STRING)
 
 	tv, err := gtk.TreeViewNewWithModel(ls)
 	tv.AppendColumn(createTreeViewColumn("input file", COLUMN_INPUT))
 	tv.AppendColumn(createTreeViewColumn("output file", COLUMN_OUTPUT))
 	tv.AppendColumn(createTreeViewColumn("status", COLUMN_STATUS))
+	tv.AppendColumn(createTreeViewColumn("message", COLUMN_MESSAGE))
 	box.Add(tv)
 
 	var destInData = func(lbi *gtk.Window,
@@ -142,9 +143,44 @@ Notes
 		fmt.Println(s)
 		lines := strings.Split(strings.ReplaceAll(s, "\r\n", "\n"), "\n")
 
+		outputDir, _ := entry.GetText()
+		outputDir = strings.TrimSpace(outputDir)
+		if outputDir == "" {
+			m := Mastering{}
+			m.Status = MasteringStatusFailed
+			m.Id = masteringId
+			masteringId += 1
+			m.Message = "output directory is empty"
+			iter := ls.Insert(0)
+			updateListItem(ls, iter, m)
+			return
+		}
+		if err := os.MkdirAll(outputDir, 0o755); err != nil {
+			m := Mastering{}
+			m.Status = MasteringStatusFailed
+			m.Id = masteringId
+			masteringId += 1
+			m.Message = "failed to create output directory: " + err.Error()
+			iter := ls.Insert(0)
+			updateListItem(ls, iter, m)
+			return
+		}
+
 		for _, line := range lines {
-			fileUrl, _ := url.Parse(line)
-			if line == "" || fileUrl == nil {
+			inputPath, parseErr := parsing.ParseDroppedFilePath(line, runtime.GOOS)
+			if parseErr != nil {
+				if strings.TrimSpace(line) == "" {
+					continue
+				}
+				m := Mastering{}
+				m.Status = MasteringStatusFailed
+				m.Id = masteringId
+				masteringId += 1
+				m.Input = strings.TrimSpace(line)
+				m.Output = ""
+				m.Message = parseErr.Error()
+				iter := ls.Insert(0)
+				updateListItem(ls, iter, m)
 				continue
 			}
 
@@ -156,12 +192,7 @@ Notes
 			m.PhaselimiterPath = filepath.Join(getExecDir(), "phaselimiter/bin/phase_limiter")
 			m.SoundQuality2Cache = filepath.Join(getExecDir(), "phaselimiter/resource/sound_quality2_cache")
 
-			m.Input = fileUrl.Path
-			if runtime.GOOS == "windows" {
-				r := regexp.MustCompile("^/([a-zA-Z]:/)")
-				m.Input = r.ReplaceAllString(m.Input, "$1")
-			}
-			outputDir, _ := entry.GetText()
+			m.Input = inputPath
 			m.Output = filepath.Base(m.Input)
 			m.Output = strings.TrimSuffix(m.Output, filepath.Ext(m.Output))
 			m.Output += "_output.wav"
@@ -180,8 +211,7 @@ Notes
 	win.Connect("drag-data-received", destInData)
 
 	go func() {
-		for {
-			m := <-masteringRunner.MasteringUpdate
+		for m := range masteringRunner.MasteringUpdate {
 			fmt.Printf("%#v\n", m)
 
 			glib.IdleAdd(func() {
